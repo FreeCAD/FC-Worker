@@ -7,7 +7,9 @@ FROM amrit3701/freecad-cli:0.21-amd64-01.05.2024
 WORKDIR /
 
 ENV LANG=en_US.UTF-8
-RUN apt-get update && apt-get install -y locales && \
+RUN sed -i 's|http://archive.ubuntu.com|http://old-releases.ubuntu.com|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.ubuntu.com|http://old-releases.ubuntu.com|g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y locales && \
     sed -i -e "s/# $LANG.*/$LANG UTF-8/" /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=$LANG
