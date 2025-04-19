@@ -1,0 +1,20 @@
+FROM amrit3701/freecad-cli:0.21-amd64-01.05.2024
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements.txt
+COPY requirements/main.txt requirements.txt
+
+# Install dependencies
+RUN pip3 install -r requirements.txt --break-system-packages
+
+# Copy code
+COPY main.py .
+COPY fc_worker ./fc_worker
+
+# Expose port for FastAPI
+EXPOSE 8080
+
+# Start FastAPI
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

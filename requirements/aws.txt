@@ -2,10 +2,6 @@
 #
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
+awslambdaric==2.0.4
 colorlog==6.7.0
-celery==5.4.0
-fastapi==0.115.8
-python-dotenv==1.0.1
-redis==5.2.1
 requests==2.31.0
-uvicorn==0.34.0
