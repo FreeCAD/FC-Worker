@@ -8,14 +8,16 @@ SPDX-License-Identifier: LGPL-2.0-or-later
 
 ## Running in non-aws mode
 
-### Building
 ```bash
+# Build the docker image
 docker-compose build
-```
 
-### Running
-```bash
+# Run the docker container
 BACKEND_URL=<backend_url> docker-compose up -d
+
+# For development
+docker-compose -f docker-compose.dev.yml build
+BACKEND_URL=<backend_url> docker-compose -f docker-compose.dev.yml up -d
 ```
 
 ## Running in aws mode
@@ -23,12 +25,10 @@ BACKEND_URL=<backend_url> docker-compose up -d
 ### Building
 
 ```bash
+# Build the docker image
 docker build -t fc-worker .
-```
 
-### Running
-
-```bash
+# Run the docker container
 docker run -p 9000:8080 -v <path_of_fc_worker>:/fc_worker --name fc_worker fc-worker:latest
 ```
 

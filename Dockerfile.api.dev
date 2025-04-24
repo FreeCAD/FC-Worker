@@ -9,9 +9,8 @@ COPY requirements/main.txt requirements.txt
 # Install dependencies
 RUN pip3 install -r requirements.txt --break-system-packages
 
-# Copy code
-COPY main.py .
-COPY fc_worker ./fc_worker
+# Expose port for FastAPI
+EXPOSE 8080
 
-# Start Celery worker
-CMD ["celery", "-A", "main.celery", "worker", "--loglevel", "info"]
+# Start FastAPI
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
