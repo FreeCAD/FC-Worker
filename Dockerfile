@@ -16,8 +16,8 @@ RUN sed -i 's|http://archive.ubuntu.com|http://old-releases.ubuntu.com|g' /etc/a
 ENV LC_ALL en_US.UTF-8
 ENV LANGUAGE en_US:en
 
-COPY requirements/main.txt  .
-RUN  pip3 install -r main.txt --break-system-packages
+COPY requirements/aws.txt  requirements.txt
+RUN  pip3 install -r requirements.txt --break-system-packages
 
 COPY fc_worker/ /fc_worker/.
 
