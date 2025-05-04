@@ -8,10 +8,7 @@ COPY requirements/main.txt requirements.txt
 
 # Install dependencies
 RUN pip3 install -r requirements.txt --break-system-packages
-
-# Copy code
-COPY main.py .
-COPY fc_worker ./fc_worker
+RUN pip3 install watchdog --break-system-packages
 
 # Start Celery worker
-CMD ["celery", "-A", "main.celery", "worker", "--loglevel", "info"]
+CMD ["watchmedo", "auto-restart", "--directory", ".", "--pattern", "*.py", "--recursive", "--", "celery", "-A", "main.celery", "worker", "--loglevel", "info"]
