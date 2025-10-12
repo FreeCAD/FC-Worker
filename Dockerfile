@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
-FROM amrit3701/freecad-cli:0.21-amd64-01.05.2024
+FROM amrit3701/freecad-cli:1.0.2-amd64-ubuntu22.04-py3.11-qt5
 
 WORKDIR /
 
