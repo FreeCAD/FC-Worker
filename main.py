@@ -40,7 +40,7 @@ async def start_job(payload: ModelPayload):
     command = payload.command
     if command == HEALTH_CHECK_CMD:
         return {"Status": "OK"}
-    elif command.upper() in [CONFIGURE_MODEL_CMD, EXPORT_CMDS]:
+    elif command.upper() in [CONFIGURE_MODEL_CMD, *EXPORT_CMDS]:
         run_background_task.delay(payload.model_dump())
         return {"Status": "Job started"}
     else:
