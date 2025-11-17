@@ -24,3 +24,5 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - BACKEND_URL=${BACKEND_URL:-http://host.docker.internal:3030}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
