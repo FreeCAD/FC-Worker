@@ -179,7 +179,7 @@ def model_configure(freecad_file_path: str, attributes: dict, obj_file_path: str
                 brep_folder = os.path.join(temp_dir, "breps")
                 os.mkdir(brep_folder)
                 for obj in objs_without_brps:
-                    Part.export([Part.show(obj.Shape)], os.path.join(brep_folder, f"ondsel_{obj.Name}.brp"))
+                    Part.export([Part.show(obj.Shape)], os.path.join(brep_folder, f"lens_{obj.Name}.brp"))
 
                 for file in link_files:
                     file_path = file.split("/", 3 + NUM_OF_PARENT_DIRECTORY_STEPS)
