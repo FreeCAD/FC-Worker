@@ -19,9 +19,14 @@ app = FastAPI()
 
 redis_host = os.environ["REDIS_HOST"]
 redis_port = os.environ["REDIS_PORT"]
+redis_password = os.environ.get("REDIS_PASSWORD", "")
+redis_username = os.environ.get("REDIS_USERNAME", "default")
 
 # Configure Celery with Redis from environment variables
-broker_url = result_backend = f"redis://{redis_host}:{redis_port}/0"
+if redis_password:
+    broker_url = result_backend = f"redis://{redis_username}:{redis_password}@{redis_host}:{redis_port}/0"
+else:
+    broker_url = result_backend = f"redis://{redis_host}:{redis_port}/0"
 celery = Celery(__name__, broker=broker_url, backend=result_backend)
 
 
