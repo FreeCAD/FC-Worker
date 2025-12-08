@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Amritpal Singh <amrit3701@gmail.com>
+#
+# SPDX-License-Identifier: LGPL-2.0-or-later
+
 import os
 
 from celery import Celery
