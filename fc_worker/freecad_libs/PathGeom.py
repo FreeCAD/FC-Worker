@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2016 sliptonic <shopinthewoods@gmail.com>
 # SPDX-FileCopyrightText: 2021 Schildkroet 
 
-# -*- coding: utf-8 -*-
 ################################################################################
 #                                                                              #
 #   FreeCAD is free software: you can redistribute it and/or modify            #
