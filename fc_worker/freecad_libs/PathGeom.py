@@ -1,7 +1,9 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2016 sliptonic <shopinthewoods@gmail.com>
+# SPDX-FileCopyrightText: 2021 Schildkroet 
+
 # -*- coding: utf-8 -*-
 # ***************************************************************************
-# *   Copyright (c) 2016 sliptonic <shopinthewoods@gmail.com>               *
-# *   Copyright (c) 2021 Schildkroet                                        *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
 # *   it under the terms of the GNU Lesser General Public License (LGPL)    *

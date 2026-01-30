@@ -1,6 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
 # SPDX-FileCopyrightText: 2024 Ondsel <development@ondsel.com>
-#
-# SPDX-License-Identifier: LGPL-2.0-or-later
+
 
 FROM amrit3701/freecad-cli:1.0.2-amd64-ubuntu22.04-py3.11-qt5
 
