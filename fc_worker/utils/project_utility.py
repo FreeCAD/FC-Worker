@@ -1,8 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2023 Werner Mayer
 # SPDX-FileCopyrightText: 2024 Ondsel <development@ondsel.com>
-#
-# SPDX-License-Identifier: LGPL-2.0-or-later
-
-# (c) 2023 Werner Mayer LGPL
 
 __title__="Document handling module"
 __author__ = "Werner Mayer"
