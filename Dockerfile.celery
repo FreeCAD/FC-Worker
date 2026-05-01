@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Amritpal Singh <amrit3701@gmail.com>
 
 
-FROM amrit3701/freecad-cli:0.21-amd64-01.05.2024
+FROM amrit3701/freecad-cli:1.0.2-amd64-ubuntu22.04-py3.11-qt5
 
 # Set working directory
 WORKDIR /app
@@ -11,7 +11,7 @@ WORKDIR /app
 COPY requirements/main.txt requirements.txt
 
 # Install dependencies
-RUN pip3 install -r requirements.txt --break-system-packages
+RUN pip3 install -r requirements.txt
 
 # Copy code
 COPY main.py .
