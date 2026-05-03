@@ -8,6 +8,7 @@ from fc_worker.api_utils import (
     HEALTH_CHECK_CMD,
     CONFIGURE_MODEL_CMD,
     EXPORT_CMDS,
+    RUN_CODE_SNIPPET_CMD,
     trace_log,
 )
 from fc_worker.config import VERSION
@@ -30,5 +31,13 @@ def lambda_handler(event, context):
         return model_configurer_command(event, context)
     elif command.upper() in EXPORT_CMDS:
         export_command(event, command)
+    elif command.upper() == RUN_CODE_SNIPPET_CMD:
+        return {
+            "Status": "ERROR",
+            "error": (
+                "RUN_CODE_SNIPPET is not supported on AWS Lambda. "
+                "Use an FC-Worker Celery deployment for sandboxed user scripts."
+            ),
+        }
     else:
         return f"Thank you strace, worker is running."
