@@ -47,6 +47,7 @@ class ModelPayload(BaseModel):
     isSharedModel: bool | None = None
     sharedModelId: str | None = None
     script: str | None = None
+    executionId: str | None = None
 
 
 @app.post("/2015-03-31/functions/function/invocations", status_code=202)

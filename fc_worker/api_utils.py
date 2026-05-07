@@ -104,17 +104,20 @@ def trace_log(func: Callable) -> Callable:
                         data_to_patch["latestLogErrorIdForStlExportCommand"] = res.json()["_id"]
                     elif command == EXPORT_OBJ_CMD:
                         data_to_patch["latestLogErrorIdForObjExportCommand"] = res.json()["_id"]
+                    elif command == RUN_CODE_SNIPPET_CMD:
+                        pass  # execution detail lives in code-runs, not on the model
 
-                    re = requests.patch(
-                        url=get_model_endpoint(model_id, is_shared_model),
-                        headers=get_headers(access_token, True),
-                        data=json.dumps(data_to_patch)
-                    )
-                    if re.ok:
-                        logger.info("Log successfully traced!")
-                    else:
-                        logger.debug(str(re.text))
-                        logger.warning("Got error in tracing log!")
+                    if data_to_patch:
+                        re = requests.patch(
+                            url=get_model_endpoint(model_id, is_shared_model),
+                            headers=get_headers(access_token, True),
+                            data=json.dumps(data_to_patch)
+                        )
+                        if re.ok:
+                            logger.info("Log successfully traced!")
+                        else:
+                            logger.debug(str(re.text))
+                            logger.warning("Got error in tracing log!")
 
                 else:
                     logger.debug(str(res.text))
@@ -122,9 +125,7 @@ def trace_log(func: Callable) -> Callable:
 
             raise ex
 
-        # RUN_CODE_SNIPPET emits its own runner-log with the full sandbox result;
-        # skip the generic SUCCESS post here to avoid a duplicate row
-        if model_id and command and file_name and command != RUN_CODE_SNIPPET_CMD:
+        if model_id and command and file_name:
             res = requests.post(
                 url=RUNNER_LOGS_ENDPOINT,
                 headers=get_headers(access_token, True),
