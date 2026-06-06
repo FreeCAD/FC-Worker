@@ -6,11 +6,16 @@ import os
 from celery import Celery
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fc_worker import export_command, model_configurer_command
+from fc_worker import (
+    export_command,
+    model_configurer_command,
+    run_code_snippet_command,
+)
 from fc_worker.api_utils import (
     CONFIGURE_MODEL_CMD,
     EXPORT_CMDS,
     HEALTH_CHECK_CMD,
+    RUN_CODE_SNIPPET_CMD,
     trace_log,
 )
 from pydantic import BaseModel
@@ -41,6 +46,8 @@ class ModelPayload(BaseModel):
     attributes: dict = {}
     isSharedModel: bool | None = None
     sharedModelId: str | None = None
+    script: str | None = None
+    executionId: str | None = None
 
 
 @app.post("/2015-03-31/functions/function/invocations", status_code=202)
@@ -48,7 +55,7 @@ async def start_job(payload: ModelPayload):
     command = payload.command
     if command == HEALTH_CHECK_CMD:
         return {"Status": "OK"}
-    elif command.upper() in [CONFIGURE_MODEL_CMD, *EXPORT_CMDS]:
+    elif command.upper() in [CONFIGURE_MODEL_CMD, *EXPORT_CMDS, RUN_CODE_SNIPPET_CMD]:
         run_background_task.delay(payload.model_dump())
         return {"Status": "Job started"}
     else:
@@ -70,6 +77,8 @@ def lambda_handler(event, context):
         return model_configurer_command(event, context)
     elif command.upper() in EXPORT_CMDS:
         export_command(event, command)
+    elif command.upper() == RUN_CODE_SNIPPET_CMD:
+        return run_code_snippet_command(event, context)
     else:
         return f"Invalid command: {command}"
 

@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # SPDX-FileCopyrightText: 2024 Ondsel <development@ondsel.com>
+# SPDX-FileCopyrightText: 2026 Amritpal Singh <amrit3701@gmail.com>
 
 import json
+import pathlib
 import requests
 import logging
 from typing import Optional, Callable
 
 from .errors import ERROR_CODES
-from .config import VERSION, RUNNER_LOGS_ENDPOINT, MODEL_ENDPOINT, USER_ENDPOINT
+from .config import VERSION, RUNNER_LOGS_ENDPOINT, MODEL_ENDPOINT, USER_ENDPOINT, UPLOAD_ENDPOINT
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,7 @@ EXPORT_STEP_CMD = "EXPORT_STEP"
 EXPORT_STL_CMD = "EXPORT_STL"
 EXPORT_OBJ_CMD = "EXPORT_OBJ"
 EXPORT_CMDS = [EXPORT_FCSTD_CMD, EXPORT_STEP_CMD, EXPORT_STL_CMD, EXPORT_OBJ_CMD]
+RUN_CODE_SNIPPET_CMD = "RUN_CODE_SNIPPET"
 
 
 def get_headers(access_token: str, include_content_type: bool = False) -> dict:
@@ -29,6 +32,29 @@ def get_headers(access_token: str, include_content_type: bool = False) -> dict:
     if include_content_type:
         headers["Content-Type"] = "application/json"
     return headers
+
+
+def download_model(file_name: str, headers: dict, dest: pathlib.Path) -> None:
+    res = requests.get(url=f"{UPLOAD_ENDPOINT}/{file_name}", headers=headers)
+    if not res.ok:
+        raise RuntimeError(
+            f"failed to obtain signed URL for {file_name}: "
+            f"{res.status_code} {res.text!r}"
+        )
+    signed_url = res.json().get("url")
+    if not signed_url:
+        raise RuntimeError(f"signed URL response missing 'url': {res.json()!r}")
+
+    res = requests.get(url=signed_url, stream=True)
+    if not res.ok:
+        raise RuntimeError(
+            f"failed to download model from signed URL: "
+            f"{res.status_code} {res.text!r}"
+        )
+    with open(dest, "wb") as f:
+        for chunk in res.iter_content(chunk_size=64 * 1024):
+            if chunk:
+                f.write(chunk)
 
 
 def get_model_endpoint(model_id: str, is_shared_model: Optional[bool] = None) -> str:
@@ -78,17 +104,20 @@ def trace_log(func: Callable) -> Callable:
                         data_to_patch["latestLogErrorIdForStlExportCommand"] = res.json()["_id"]
                     elif command == EXPORT_OBJ_CMD:
                         data_to_patch["latestLogErrorIdForObjExportCommand"] = res.json()["_id"]
+                    elif command == RUN_CODE_SNIPPET_CMD:
+                        pass  # execution detail lives in code-runs, not on the model
 
-                    re = requests.patch(
-                        url=get_model_endpoint(model_id, is_shared_model),
-                        headers=get_headers(access_token, True),
-                        data=json.dumps(data_to_patch)
-                    )
-                    if re.ok:
-                        logger.info("Log successfully traced!")
-                    else:
-                        logger.debug(str(re.text))
-                        logger.warning("Got error in tracing log!")
+                    if data_to_patch:
+                        re = requests.patch(
+                            url=get_model_endpoint(model_id, is_shared_model),
+                            headers=get_headers(access_token, True),
+                            data=json.dumps(data_to_patch)
+                        )
+                        if re.ok:
+                            logger.info("Log successfully traced!")
+                        else:
+                            logger.debug(str(re.text))
+                            logger.warning("Got error in tracing log!")
 
                 else:
                     logger.debug(str(res.text))

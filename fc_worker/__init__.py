@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # SPDX-FileCopyrightText: 2024 Ondsel <development@ondsel.com>
+# SPDX-FileCopyrightText: 2026 Amritpal Singh <amrit3701@gmail.com>
 
 """FreeCAD Worker"""
 import logging.config
@@ -15,5 +16,6 @@ logger.info("Imports successful!")
 
 from fc_worker.model_configurer import model_configurer_command
 from fc_worker.exporter import export_command
+from fc_worker.code_runner import run_code_snippet_command
 
-__all__ = [model_configurer, export_command]
+__all__ = ["model_configurer_command", "export_command", "run_code_snippet_command"]
