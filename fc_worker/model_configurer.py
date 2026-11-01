@@ -62,6 +62,7 @@ def model_configurer_command(event, context):
 
         output_file = f"{tmp_dir}/{_id}_generated.FCSTD"
         file_suffix = file_name.suffix.upper()
+        warnings = None
         if file_suffix == ".OBJ":
             with open(output_file, "wb") as ff:
                 ff.write(file_data)
@@ -84,7 +85,8 @@ def model_configurer_command(event, context):
                     raise UserNotAllowedToRecomputeAssembliesError()
             converted = f"{nested_dir_path}/{_id}_from_kicad.FCStd"
             stats = convert_kicad_pcb(input_file, converted)
-            logger.info("KiCad board converted: %s", stats)
+            if stats["missingModels"]:
+                warnings = {"missingModels": stats["missingModels"]}
             attributes = model_configure(converted, attributes, output_file, [])
         elif file_suffix == ".FCSTD":
             # Create nested directories to handle ".." path in linked files
@@ -134,6 +136,7 @@ def model_configurer_command(event, context):
             "isObjGenerationInProgress": False,
             "isObjGenerated": True,
             "attributes": attributes,
+            "generationWarnings": warnings,
         }
 
         headers["Content-Type"] = "application/json"

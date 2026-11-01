@@ -165,17 +165,30 @@ def convert_kicad_pcb(board_path, output_path, part_path=None):
     FreeCAD.closeDocument(doc.Name)
     _inject_gui_document(output_path, gui_items)
 
-    missing = getattr(fcad, "missing_models", set())
+    missing = []
+    for raw, refs in fcad.missing_models.items():
+        path = raw.strip('"')
+        variable = re.search(r"\$\{(\w+)\}", path)
+        library = variable.group(1) if variable else None
+        if "${" in fcad.resolve_model_path(path):
+            reason = "LIBRARY_NOT_CONFIGURED"
+        elif path.lower().endswith(".wrl"):
+            reason = "NO_STEP_MODEL"
+        elif library == "KIPRJMOD" or (library is None and not os.path.isabs(path)):
+            reason = "PROJECT_FILE_NOT_UPLOADED"
+        else:
+            reason = "FILE_NOT_FOUND"
+        missing.append({"path": path, "library": library, "reason": reason, "refs": sorted(set(refs))})
     stats = {
         "objects": len(gui_items),
         "componentsPlaced": len(label_counts),
         "multiColorModels": multi_color,
-        "missingModels": len(missing),
+        "missingModels": missing,
         "output": output_path,
     }
-    logger.info("KiCad conversion stats: %s", stats)
+    logger.info("KiCad conversion stats: %s", {**stats, "missingModels": len(missing)})
     if missing:
-        logger.warning("KiCad 3D models missing (%d), e.g. %s", len(missing), sorted(m.strip('"') for m in missing)[:3])
+        logger.warning("KiCad 3D models missing (%d), e.g. %s", len(missing), [m["path"] for m in missing[:3]])
     embed_dir = getattr(fcad, "_embed_dir", None)
     if embed_dir:
         shutil.rmtree(embed_dir, ignore_errors=True)
