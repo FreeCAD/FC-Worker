@@ -1,0 +1,3 @@
+[submodule "fc_worker/third_party/kicadStepUpMod"]
+	path = fc_worker/third_party/kicadStepUpMod
+	url = https://github.com/amrit3701/kicadStepUpMod.git

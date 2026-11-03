@@ -18,6 +18,7 @@ from .api_utils import trace_error_log, load_user
 from .errors import MissingAssembliesError, UserNotAllowedToRecomputeAssembliesError
 from .config import UPLOAD_ENDPOINT, MODEL_ENDPOINT
 from .assemblies_handler import download_assemblies
+from .kicad_converter import convert_kicad_pcb
 from .utils.generic_utils import get_property_bag_obj, get_app_varset_obj, get_property_data, update_model, get_visible_objects, is_obj_have_part_file
 from .utils.project_utility import createDocument
 
@@ -63,6 +64,17 @@ def model_configurer_command(event, context):
         if file_suffix == ".OBJ":
             with open(output_file, "wb") as ff:
                 ff.write(file_data)
+        elif file_suffix == ".KICAD_PCB":
+            relative_nested_dir_path = "/".join([str(uuid.uuid4()) for _ in range(NUM_OF_PARENT_DIRECTORY_STEPS)])
+            nested_dir_path = f"{tmp_dir}/{relative_nested_dir_path}"
+            os.makedirs(nested_dir_path)
+            input_file = f"{nested_dir_path}/{file_name.name}"
+            with open(input_file, "wb") as f:
+                f.write(file_data)
+            converted = f"{nested_dir_path}/{_id}_from_kicad.FCStd"
+            stats = convert_kicad_pcb(input_file, converted)
+            logger.info("KiCad board converted: %s", stats)
+            attributes = model_configure(converted, attributes, output_file, [])
         elif file_suffix == ".FCSTD":
             # Create nested directories to handle ".." path in linked files
             relative_nested_dir_path = "/".join([str(uuid.uuid4()) for _ in range(NUM_OF_PARENT_DIRECTORY_STEPS)])

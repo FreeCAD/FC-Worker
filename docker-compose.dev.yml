@@ -21,16 +21,37 @@ services:
       - ./fc_worker:/app/fc_worker
       - ./main.py:/app/main.py
 
+  kicad-3dmodels:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.celery.dev
+    command: ["sh", "scripts/fetch-kicad-3dmodels.sh", "/usr/share/kicad/3dmodels"]
+    restart: "no"
+    volumes:
+      - ./scripts:/app/scripts
+      - ${KICAD_3DMODELS_VOLUME:-kicad_3dmodels}:/usr/share/kicad/3dmodels
+
   celery-worker:
     build:
       context: .
       dockerfile: ./Dockerfile.celery.dev
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      kicad-3dmodels:
+        condition: service_completed_successfully
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - BACKEND_URL=${BACKEND_URL:-http://host.docker.internal:3030}
+      - KICAD_3D_LIBRARIES=/usr/share/kicad/3dmodels
+    # bubblewrap (RUN_CODE_SNIPPET sandbox) needs CAP_SYS_ADMIN + writable cgroup.
+    privileged: true
     volumes:
       - ./fc_worker:/app/fc_worker
       - ./main.py:/app/main.py
+      - ${KICAD_3DMODELS_VOLUME:-kicad_3dmodels}:/usr/share/kicad/3dmodels
+
+volumes:
+  kicad_3dmodels:
+    name: kicad_3dmodels
