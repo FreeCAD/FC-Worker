@@ -26,6 +26,9 @@ services:
       context: .
       dockerfile: ./Dockerfile.celery.dev
     command: ["sh", "scripts/fetch-kicad-3dmodels.sh", "/usr/share/kicad/3dmodels"]
+    environment:
+      - KICAD_ENABLED=${KICAD_ENABLED:-true}
+      - KICAD_3D_REF
     restart: "no"
     volumes:
       - ./scripts:/app/scripts

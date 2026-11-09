@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2026 Amritpal Singh <amrit3701@gmail.com>
+
 # Populate the KiCad 3D library parent directory.
 #
 # Layout, mounted into FC-Worker at /usr/share/kicad/3dmodels:
@@ -11,6 +14,11 @@
 #   KICAD_3D_REF=10.0.7 ./scripts/fetch-kicad-3dmodels.sh /path/to/kicad-3dmodels
 
 set -eu
+
+if [ "${KICAD_ENABLED:-true}" = "false" ]; then
+  echo "KICAD_ENABLED=false: skipping the KiCad 3D library"
+  exit 0
+fi
 
 PARENT="${1:-${KICAD_3D_LIBRARIES:-./kicad-3dmodels}}"
 REF="${KICAD_3D_REF:-10.0.7}"

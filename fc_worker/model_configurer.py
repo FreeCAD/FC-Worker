@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # SPDX-FileCopyrightText: 2024 Ondsel <development@ondsel.com>
+# SPDX-FileCopyrightText: 2026 Amritpal Singh <amrit3701@gmail.com>
 
 import pathlib
 import json
@@ -149,10 +150,15 @@ def model_configure(freecad_file_path: str, attributes: dict, obj_file_path: str
             with zipfile.ZipFile(freecad_file_path, "r") as zip_ref:
                 zip_ref.extractall(tmp_dir)
 
-            xml_root_gui = ET.parse(f"{tmp_dir}/GuiDocument.xml")
+            gui_doc_path = f"{tmp_dir}/GuiDocument.xml"
             xml_root = ET.parse(f"{tmp_dir}/Document.xml")
 
-            visible_objects_names = get_visible_objects(xml_root_gui)
+            if os.path.exists(gui_doc_path):
+                xml_root_gui = ET.parse(gui_doc_path)
+                visible_objects_names = get_visible_objects(xml_root_gui)
+            else:
+                # GuiDocument.xml absent (headless-saved file) — treat all objects as visible
+                visible_objects_names = [obj.Name for obj in doc.Objects]
             logger.debug(f"Visible objects: {visible_objects_names}")
             objs_without_brps = []
             for obj_name in visible_objects_names:
