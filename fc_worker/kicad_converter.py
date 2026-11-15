@@ -115,7 +115,7 @@ def convert_kicad_pcb(board_path, output_path, part_path=None):
 
     part_path = part_path or _default_3d_model_dir()
     fcad = kicad_parser.KicadFcad(board_path, add_feature=False, part_path=part_path)
-    board_shape = _as_shape(fcad.makeBoard(shape_type="solid"), Part)
+    board_shape = _as_shape(fcad.makeBoard(shape_type="solid", thickness=fcad.board_thickness), Part)
     if board_shape is None:
         raise RuntimeError(f"KiCad board has no Edge.Cuts outline: {board_path}")
 

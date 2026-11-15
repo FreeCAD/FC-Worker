@@ -235,6 +235,14 @@ def _rlimit_preexec(cpu_seconds, memory_bytes, fsize_bytes, nproc, nofile):
     return apply
 
 
+def _system_ro_binds():
+    argv = []
+    for path in ("/usr", "/lib", "/lib64", "/bin", "/sbin", "/etc"):
+        if os.path.exists(path):
+            argv += ["--ro-bind", path, path]
+    return argv
+
+
 def _build_bwrap_argv(
     scratch_dir,
     runner_path,
@@ -255,12 +263,7 @@ def _build_bwrap_argv(
         "--unshare-all",
         "--die-with-parent",
         "--new-session",
-        "--ro-bind", "/usr", "/usr",
-        "--ro-bind", "/lib", "/lib",
-        "--ro-bind", "/lib64", "/lib64",
-        "--ro-bind", "/bin", "/bin",
-        "--ro-bind", "/sbin", "/sbin",
-        "--ro-bind", "/etc", "/etc",
+        *_system_ro_binds(),
         "--ro-bind", "/app", "/app",
         "--proc", "/proc",
         "--dev", "/dev",
