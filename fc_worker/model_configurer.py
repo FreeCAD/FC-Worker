@@ -18,7 +18,7 @@ import Part
 from .api_utils import trace_error_log, load_user
 from .errors import MissingAssembliesError, UserNotAllowedToRecomputeAssembliesError
 from .config import UPLOAD_ENDPOINT, MODEL_ENDPOINT
-from .assemblies_handler import download_assemblies
+from .assemblies_handler import download_assemblies, download_kicad_models
 from .kicad_converter import convert_kicad_pcb
 from .utils.generic_utils import get_property_bag_obj, get_app_varset_obj, get_property_data, update_model, get_visible_objects, is_obj_have_part_file
 from .utils.project_utility import createDocument
@@ -62,6 +62,7 @@ def model_configurer_command(event, context):
 
         output_file = f"{tmp_dir}/{_id}_generated.FCSTD"
         file_suffix = file_name.suffix.upper()
+        warnings = None
         if file_suffix == ".OBJ":
             with open(output_file, "wb") as ff:
                 ff.write(file_data)
@@ -72,9 +73,20 @@ def model_configurer_command(event, context):
             input_file = f"{nested_dir_path}/{file_name.name}"
             with open(input_file, "wb") as f:
                 f.write(file_data)
+
+            linked_files, files_available, files_not_available = download_kicad_models(_id, input_file, nested_dir_path, headers)
+            logger.debug(f"Linked Files: {str(linked_files)}")
+            logger.debug(f"Files Available: {str(files_available)}")
+            logger.debug(f"Files not available: {str(files_not_available)}")
+            user = load_user(event)
+
+            if linked_files:
+                if not (user and user.get("tier") in ("Peer", "Enterprise")):
+                    raise UserNotAllowedToRecomputeAssembliesError()
             converted = f"{nested_dir_path}/{_id}_from_kicad.FCStd"
             stats = convert_kicad_pcb(input_file, converted)
-            logger.info("KiCad board converted: %s", stats)
+            if stats["missingModels"]:
+                warnings = {"missingModels": stats["missingModels"]}
             attributes = model_configure(converted, attributes, output_file, [])
         elif file_suffix == ".FCSTD":
             # Create nested directories to handle ".." path in linked files
@@ -124,6 +136,7 @@ def model_configurer_command(event, context):
             "isObjGenerationInProgress": False,
             "isObjGenerated": True,
             "attributes": attributes,
+            "generationWarnings": warnings,
         }
 
         headers["Content-Type"] = "application/json"
