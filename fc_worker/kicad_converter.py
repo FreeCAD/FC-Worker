@@ -34,6 +34,15 @@ def _default_3d_model_dir():
     )
 
 
+def _project_file(path, project_dir):
+    """Path relative to the board folder for models that live in it, else None."""
+    path = os.path.abspath(path)
+    project_dir = os.path.abspath(project_dir)
+    if os.path.commonpath([path, project_dir]) != project_dir:
+        return None
+    return os.path.relpath(path, project_dir).replace(os.sep, "/")
+
+
 def _pack_rgba(rgb):
     # App::Color packed value: 0xRRGGBBAA
     r, g, b = (max(0, min(255, int(round(c * 255)))) for c in rgb[:3])
@@ -133,18 +142,18 @@ def convert_kicad_pcb(board_path, output_path, part_path=None):
                 colors = model.get("color")
                 if not colors or len(colors) != len(shape.Faces):
                     colors = [_DEFAULT_PART_COLOR]
-                placed.append((f"{ref}_{model['name']}", shape, colors))
+                placed.append((f"{ref}_{model['name']}", shape, colors, _project_file(model["file"], fcad.project_dir)))
 
-    named = [("board", board_shape, [_BOARD_GREEN])]
+    named = [("board", board_shape, [_BOARD_GREEN], None)]
     label_counts = {}
     multi_color = 0
-    for label, shape, colors in placed:
+    for label, shape, colors, source in placed:
         label_counts[label] = label_counts.get(label, 0) + 1
         if label_counts[label] > 1:
             label = f"{label}_{label_counts[label]}"
         if len(colors) > 1:
             multi_color += 1
-        named.append((label, shape, colors))
+        named.append((label, shape, colors, source))
 
     doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("kicad_import")
     for obj in list(doc.Objects):
@@ -154,10 +163,13 @@ def convert_kicad_pcb(board_path, output_path, part_path=None):
             pass
 
     gui_items = []
-    for label, shape, colors in named:
+    for label, shape, colors, source in named:
         feature = doc.addObject("Part::Feature", _safe_name(label))
         feature.Label = label
         feature.Shape = shape
+        if source:
+            feature.addProperty("App::PropertyString", "SourceFile", "KiCad", "Model file relative to the board")
+            feature.SourceFile = source
         gui_items.append((feature.Name, colors))
     doc.recompute()
     os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
@@ -165,17 +177,30 @@ def convert_kicad_pcb(board_path, output_path, part_path=None):
     FreeCAD.closeDocument(doc.Name)
     _inject_gui_document(output_path, gui_items)
 
-    missing = getattr(fcad, "missing_models", set())
+    missing = []
+    for raw, refs in fcad.missing_models.items():
+        path = raw.strip('"')
+        variable = re.search(r"\$\{(\w+)\}", path)
+        library = variable.group(1) if variable else None
+        if "${" in fcad.resolve_model_path(path):
+            reason = "LIBRARY_NOT_CONFIGURED"
+        elif path.lower().endswith(".wrl"):
+            reason = "NO_STEP_MODEL"
+        elif library == "KIPRJMOD" or (library is None and not os.path.isabs(path)):
+            reason = "PROJECT_FILE_NOT_UPLOADED"
+        else:
+            reason = "FILE_NOT_FOUND"
+        missing.append({"path": path, "library": library, "reason": reason, "refs": sorted(set(refs))})
     stats = {
         "objects": len(gui_items),
         "componentsPlaced": len(label_counts),
         "multiColorModels": multi_color,
-        "missingModels": len(missing),
+        "missingModels": missing,
         "output": output_path,
     }
-    logger.info("KiCad conversion stats: %s", stats)
+    logger.info("KiCad conversion stats: %s", {**stats, "missingModels": len(missing)})
     if missing:
-        logger.warning("KiCad 3D models missing (%d), e.g. %s", len(missing), sorted(m.strip('"') for m in missing)[:3])
+        logger.warning("KiCad 3D models missing (%d), e.g. %s", len(missing), [m["path"] for m in missing[:3]])
     embed_dir = getattr(fcad, "_embed_dir", None)
     if embed_dir:
         shutil.rmtree(embed_dir, ignore_errors=True)
